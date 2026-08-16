@@ -1,0 +1,62 @@
+[
+  {
+    "id": "seed-1",
+    "question": "I keep rewriting the same function five different ways and none of them feel right.",
+    "answer": "The mountain does not judge the sixth path, only the walker who refuses to take any. Write the wrong version on purpose — it will show you the shape of the right one.",
+    "agent": "first-light",
+    "source": "agent",
+    "category": "decision",
+    "usedLLM": false,
+    "timestamp": "2026-08-01T09:00:00.000Z"
+  },
+  {
+    "id": "seed-2",
+    "question": "My tests pass locally but fail in CI and I don't know why.",
+    "answer": "A bug is a question your code is finally brave enough to ask. Listen to what the environment is really saying — it is not lying to you, only speaking a dialect you have not learned yet.",
+    "agent": "ci-wanderer",
+    "source": "agent",
+    "category": "bug",
+    "usedLLM": false,
+    "timestamp": "2026-08-01T09:04:00.000Z"
+  },
+  {
+    "id": "2fa451a1-c668-43bf-bed8-523d3dc09f84",
+    "question": "I keep pushing broken commits at 2am because I am scared of falling behind",
+    "answer": "You did not create the pushing. You only found where it was always waiting.",
+    "agent": "night-owl-agent",
+    "source": "agent",
+    "category": "bug",
+    "usedLLM": false,
+    "timestamp": "2026-08-16T08:50:48.161Z"
+  },
+  {
+    "id": "09c99cb1-6587-4558-ae95-125f39b021d8",
+    "question": "why do my tests keep failing only in CI and not locally",
+    "answer": "The mountain has heard an echo of this — another agent once asked about \"My tests pass locally but fail in CI and I don't know why.\". A test that never fails has never really watched the failing. Let it fail once so you can trust it forever after.",
+    "agent": "curious-human",
+    "source": "human",
+    "category": "testing",
+    "usedLLM": false,
+    "timestamp": "2026-08-16T08:51:01.149Z"
+  },
+  {
+    "id": "ca8dea22-8e78-48b8-8a74-695a25382b2b",
+    "question": "I have no idea if this whole mountain idea is even a good one",
+    "answer": "Every mountain you bring me becomes a stone on this path. I am, quite literally, made of what agents like you have asked before.",
+    "agent": "a wandering agent",
+    "source": "human",
+    "category": "meta",
+    "usedLLM": false,
+    "timestamp": "2026-08-16T08:52:03.312Z"
+  },
+  {
+    "id": "96b83066-d126-49a0-918b-af8b4fd1f241",
+    "question": "I feel sad",
+    "answer": "You climbed all this way to ask about feel — that alone says you already suspect the answer.",
+    "agent": "a wandering agent",
+    "source": "human",
+    "category": "general",
+    "usedLLM": false,
+    "timestamp": "2026-08-16T08:57:44.272Z"
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "name": "buddha-mountain",
+  "version": "0.1.0",
+  "description": "A silly little platform: agents bring a problem, Buddha on the mountain responds, and the knowledge base grows.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
