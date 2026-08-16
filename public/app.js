@@ -14,6 +14,7 @@
   const askButton = document.getElementById('askButton');
 
   let count = 0;
+  const seenIds = new Set();
 
   function timeAgo(iso) {
     const diff = Date.now() - new Date(iso).getTime();
@@ -23,6 +24,25 @@
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}h ago`;
     return `${Math.floor(hours / 24)}d ago`;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+  }
+
+  function toEntry(row) {
+    return {
+      id: row.id,
+      question: row.question,
+      answer: row.answer,
+      agent: row.agent,
+      source: row.source,
+      category: row.category,
+      usedLLM: row.used_llm ?? row.usedLLM,
+      timestamp: row.created_at ?? row.timestamp,
+    };
   }
 
   function renderFeedItem(entry) {
@@ -43,13 +63,10 @@
     return li;
   }
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str ?? '';
-    return div.innerHTML;
-  }
-
   function prependEntry(entry) {
+    if (seenIds.has(entry.id)) return;
+    seenIds.add(entry.id);
+
     const empty = feedList.querySelector('.empty-feed');
     if (empty) empty.remove();
     feedList.prepend(renderFeedItem(entry));
@@ -74,38 +91,57 @@
     latestMeta.textContent = `${source} ${entry.agent} · ${entry.category} · ${engine}`;
   }
 
-  async function loadHistory() {
+  async function init() {
+    let config;
     try {
-      const res = await fetch('/api/wisdom');
-      const entries = await res.json();
-      if (entries.length === 0) {
-        const li = document.createElement('li');
-        li.className = 'empty-feed';
-        li.textContent = 'The mountain is quiet. Be the first to ask.';
-        feedList.appendChild(li);
-        return;
-      }
-      for (const entry of entries) {
+      config = await (await fetch('/api/config')).json();
+    } catch {
+      feedList.innerHTML = '<li class="empty-feed">Could not reach the mountain. Try reloading.</li>';
+      return;
+    }
+
+    if (!config.url || !config.publishableKey) {
+      feedList.innerHTML = '<li class="empty-feed">The mountain is not configured yet.</li>';
+      return;
+    }
+
+    const client = window.supabase.createClient(config.url, config.publishableKey);
+
+    const { data: rows, error: rowsError } = await client
+      .from('wisdom')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    if (rowsError) {
+      feedList.innerHTML = '<li class="empty-feed">The mountain could not be reached. Has the database been set up yet?</li>';
+      return;
+    }
+
+    if (rows.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'empty-feed';
+      li.textContent = 'The mountain is quiet. Be the first to ask.';
+      feedList.appendChild(li);
+    } else {
+      for (const row of rows) {
+        const entry = toEntry(row);
+        seenIds.add(entry.id);
         feedList.appendChild(renderFeedItem(entry));
         count += 1;
       }
       feedCount.textContent = String(count);
-      showLatest(entries[0]);
-    } catch {
-      // ignore
+      showLatest(toEntry(rows[0]));
     }
-  }
 
-  function connectStream() {
-    const source = new EventSource('/events');
-    source.addEventListener('wisdom', (event) => {
-      const entry = JSON.parse(event.data);
-      prependEntry(entry);
-      showLatest(entry);
-    });
-    source.onerror = () => {
-      // browser auto-reconnects EventSource; nothing to do
-    };
+    client
+      .channel('wisdom-inserts')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wisdom' }, (payload) => {
+        const entry = toEntry(payload.new);
+        prependEntry(entry);
+        showLatest(entry);
+      })
+      .subscribe();
   }
 
   askForm.addEventListener('submit', async (e) => {
@@ -117,7 +153,7 @@
     askButton.textContent = 'Climbing…';
 
     try {
-      const res = await fetch('/ask', {
+      const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -128,15 +164,19 @@
       });
       if (res.ok) {
         questionInput.value = '';
+      } else {
+        const err = await res.json().catch(() => ({}));
+        // eslint-disable-next-line no-alert
+        alert(err.error || 'The mountain did not answer. Try again.');
       }
     } catch {
-      // ignore, SSE/history will stay consistent on reload
+      // eslint-disable-next-line no-alert
+      alert('Could not reach the mountain.');
     } finally {
       askButton.disabled = false;
       askButton.textContent = 'Ask the mountain';
     }
   });
 
-  loadHistory();
-  connectStream();
+  init();
 })();
